@@ -69,7 +69,7 @@ parser.add_option('--host', default=None, dest="host",
 
 # get all the ssh configs for all boxes in an array of dictionaries.
 def get_ssh_config():
-    return dict((k, get_a_ssh_config(k)) for k in list_running_boxes())
+    return {k: get_a_ssh_config(k) for k in list_running_boxes()}
 
 
 # list all the running boxes
@@ -80,9 +80,8 @@ def list_running_boxes():
     boxes = []
 
     for line in output:
-        matcher = re.search(r"([^\s]+)[\s]+running \(.+", line)
-        if matcher:
-            boxes.append(matcher.group(1))
+        if matcher := re.search(r"([^\s]+)[\s]+running \(.+", line):
+            boxes.append(matcher[1])
 
     return boxes
 
@@ -103,7 +102,7 @@ def get_a_ssh_config(box_name):
         if os.path.isfile(id):
             host_config['identityfile'] = id
 
-    return dict((v, host_config[k]) for k, v in _ssh_to_ansible)
+    return {v: host_config[k] for k, v in _ssh_to_ansible}
 
 
 # List out servers that vagrant has running
@@ -116,16 +115,9 @@ if options.list:
         meta['hostvars'][host] = ssh_config[host]
 
     print(json.dumps({_group: list(ssh_config.keys()), '_meta': meta}))
-    sys.exit(0)
-
-# Get out the host details
-# ------------------------------
 elif options.host:
     print(json.dumps(get_a_ssh_config(options.host)))
-    sys.exit(0)
-
-# Print out help
-# ------------------------------
 else:
     parser.print_help()
-    sys.exit(0)
+
+sys.exit(0)
